@@ -7,6 +7,7 @@ const { runScript } = require('./index');
 const BilledTransaction = require('./models/BilledTransaction');
 
 let mainWindow;
+let dbConnectionPromise;
 let scriptController = null;
 let storeNames = [];
 let processedStores = {
@@ -26,8 +27,9 @@ async function connectToDB() {
     } catch (error) {
         log.error('MongoDB connection failed:', error);
         console.error('MongoDB connection failed:', error);
-        // We should quit the app if we can't connect to the DB
-        app.quit();
+        // We should not quit the app if we can't connect to the DB,
+        // instead propagate the error.
+        throw error;
     }
 }
 
@@ -70,21 +72,23 @@ function createWindow() {
     });
 }
 
-app?.whenReady()?.then(async () => {
+app?.whenReady()?.then(() => {
     try {
         log.info('App is ready.');
         createWindow();
-        await connectToDB();
+        
+        dbConnectionPromise = connectToDB();
+        dbConnectionPromise.catch(err => {
+            log.error('Background DB connection failed.', err);
+            if (mainWindow) {
+                mainWindow.webContents.on('did-finish-load', () => {
+                    mainWindow.webContents.send('error-message', 'Could not connect to the database.');
+                });
+            }
+        });
     } catch (error) {
         log.error('Failed to initialize:', error);
         console.error('Failed to initialize:', error);
-        app.quit();
-    }
-});
-
-app.on('window-all-closed', () => {
-    log.info('All windows closed.');
-    if (process.platform !== 'darwin') {
         app.quit();
     }
 });
@@ -95,12 +99,27 @@ app.on('activate', () => {
     }
 });
 
+app.on('window-all-closed', () => {
+    log.info('All windows closed.');
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+    }
+});
+
 ipcMain.on('get-stores', async (event) => {
-    await loadStoreNames();
-    event.reply('stores-loaded', {
-        stores: storeNames,
-        total: processedStores.total
-    });
+    try {
+        await loadStoreNames();
+        event.reply('stores-loaded', {
+            stores: storeNames,
+            total: processedStores.total
+        });
+    } catch(error) {
+        log.error('Could not get stores. DB connection might have failed.', error);
+        event.reply('stores-loaded', { stores: [], total: 0, error: 'Could not load stores. Check DB connection.' });
+    }
 });
 
 ipcMain.on('start-script', async (event, { browserWait, pageWait }) => {

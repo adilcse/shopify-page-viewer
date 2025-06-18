@@ -102,123 +102,47 @@
             gap: 20px;
             margin-bottom: 20px;
         }
+        #error-message {
+            color: #f44336;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Shopify Store Navigator</h1>
+        <div id="error-message"></div>
         
         <div class="input-container">
             <div class="input-group">
-                <label for="browserWait">Browser Wait Time (m):</label>
-                <input type="number" id="browserWait" value="0" min="0">
+                <label for="browser-wait">Browser Wait Time (m):</label>
+                <input type="number" id="browser-wait" value="0" min="0">
             </div>
             
             <div class="input-group">
-                <label for="pageWait">Page Wait Time (m):</label>
-                <input type="number" id="pageWait" value="0" min="0">
+                <label for="page-wait">Page Wait Time (m):</label>
+                <input type="number" id="page-wait" value="0" min="0">
             </div>
         </div>
 
         <div class="controls">
-            <button id="startBtn">Start</button>
-            <button id="stopBtn" disabled>Stop</button>
+            <button id="get-stores">Get Stores</button>
+            <button id="start-script">Start</button>
+            <button id="stop-script">Stop</button>
         </div>
 
         <div class="progress">
-            <div class="progress-bar">
-                <div class="progress-bar-fill" style="width: 0%"></div>
-            </div>
+            <div id="store-count">Total stores to process: 0</div>
             <div class="status">
-                Progress: <span id="progressText">0/0</span> stores
-                (<span id="successCount">0</span> succeeded, <span id="failCount">0</span> failed)
-            </div>
-            <div class="status">
-                Current Store: <span id="currentStore">-</span>
+                <span id="succeeded-count">Succeeded: 0</span>, 
+                <span id="failed-count">Failed: 0</span>
             </div>
         </div>
 
-        <div id="output"></div>
+        <pre id="output"></pre>
     </div>
 
-    <script>
-        const { ipcRenderer } = require('electron');
-        
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const output = document.getElementById('output');
-        const progressBar = document.querySelector('.progress-bar-fill');
-        const progressText = document.getElementById('progressText');
-        const successCount = document.getElementById('successCount');
-        const failCount = document.getElementById('failCount');
-        const currentStore = document.getElementById('currentStore');
-        const browserWaitInput = document.getElementById('browserWait');
-        const pageWaitInput = document.getElementById('pageWait');
-
-        let isRunning = false;
-
-        function updateButtons() {
-            startBtn.disabled = isRunning;
-            stopBtn.disabled = !isRunning;
-        }
-
-        startBtn.addEventListener('click', () => {
-            const browserWait = parseInt(browserWaitInput.value) || 0;
-            const pageWait = parseInt(pageWaitInput.value) || 0;
-            
-            isRunning = true;
-            updateButtons();
-            output.textContent = '';
-            
-            ipcRenderer.send('start-script', { browserWait, pageWait });
-        });
-
-        stopBtn.addEventListener('click', () => {
-            isRunning = false;
-            updateButtons();
-            ipcRenderer.send('stop-script');
-        });
-
-        ipcRenderer.on('script-output', (event, data) => {
-            output.textContent += data;
-            output.scrollTop = output.scrollHeight;
-        });
-
-        ipcRenderer.on('script-error', (event, error) => {
-            output.textContent += `\nError: ${error}`;
-            output.scrollTop = output.scrollHeight;
-        });
-
-        ipcRenderer.on('progress-update', (event, data) => {
-            const total = data.total;
-            const succeeded = data.succeeded;
-            const failed = data.failed;
-            const progress = ((succeeded + failed) / total) * 100;
-            
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `${succeeded + failed}/${total}`;
-            successCount.textContent = succeeded;
-            failCount.textContent = failed;
-            
-            if (data.currentStore) {
-                currentStore.textContent = data.currentStore;
-            }
-        });
-
-        ipcRenderer.on('script-finished', (event, code) => {
-            isRunning = false;
-            updateButtons();
-            output.textContent += `\nScript finished with code: ${code}\n`;
-        });
-
-        // Request initial store list
-        ipcRenderer.send('get-stores');
-        
-        ipcRenderer.on('stores-loaded', (event, data) => {
-            progressText.textContent = `0/${data.total}`;
-            successCount.textContent = '0';
-            failCount.textContent = '0';
-        });
-    </script>
+    <script src="./renderer.js"></script>
 </body>
 </html> 

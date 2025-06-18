@@ -48,7 +48,7 @@ function runScript({ browserWait, pageWait, onProgress }) {
 
             // Wait for specified minutes after browser launch
             if (browserWait > 0) {
-                onProgress(`Waiting for ${browserWait}ms after browser launch...`);
+                onProgress(`Waiting for ${browserWait} minutes after browser launch...`);
                 await interruptibleWait(browserWait * 60 * 1000);
                 if (!running) return;
                 onProgress('Browser wait completed');
@@ -91,7 +91,7 @@ function runScript({ browserWait, pageWait, onProgress }) {
 
                     // Wait after opening page
                     if (pageWait > 0) {
-                        onProgress(`Waiting for ${pageWait}ms after opening page...`);
+                        onProgress(`Waiting for ${pageWait} minutes after opening page...`);
                         await interruptibleWait(pageWait * 60 * 1000);
                         if (!running) break;
                     }

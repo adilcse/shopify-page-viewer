@@ -54,8 +54,11 @@
     "files": [
       "main.js",
       "index.js",
+      "scripts/**/*",
+      "scripts.js",
       "browser.js",
       "index.html",
+      "renderer.js",
       "models/**/*",
       ".env",
       "package.json",
