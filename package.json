@@ -1,0 +1,81 @@
+{
+  "name": "shopify-page-viewer",
+  "version": "1.0.0",
+  "description": "Shopify Page Viewer with controls",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable --dir",
+    "build:installer": "electron-builder --win nsis",
+    "generate-icons": "node scripts/generate-icons.js",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "author": "Adil Hussain",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.0.0",
+    "puppeteer": "^24.10.1",
+    "puppeteer-core": "^24.10.1",
+    "source-map-support": "^0.5.21",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^26.0.12",
+    "sharp": "^0.33.2"
+  },
+  "build": {
+    "appId": "com.shopify.pageviewer",
+    "productName": "Shopify Page Viewer",
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "ShopifyPageViewer.exe"
+    },
+    "extraResources": [
+      {
+        "from": ".cache/puppeteer",
+        "to": "puppeteer",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "files": [
+      "main.js",
+      "index.js",
+      "browser.js",
+      "index.html",
+      "models/**/*",
+      ".env",
+      "package.json",
+      "node_modules/**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}",
+      "!**/node_modules/puppeteer/.local-chromium/**/*"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "asar": true
+  }
+}
